@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+			integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+			crossorigin="anonymous"
+		/>
+		<link rel="stylesheet" href="style.css" />
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script src="https://unpkg.com/vue@next"></script>
+	</head>
+	<body>
+		<div id="app">
+			<div class="container">
+				<div class="row justify-content-center">
+					<h1 class="h3 mb-3 font-weight-normal">請先登入</h1>
+					<div class="col-8">
+						<form id="form" class="form-signin">
+							<div class="form-floating mb-3">
+								<input
+									type="email"
+									class="form-control"
+									id="username"
+									placeholder="name@example.com"
+									required
+									autofocus
+									v-model="email"
+								/>
+								<label for="username">Email address</label>
+							</div>
+							<div class="form-floating">
+								<input
+									type="password"
+									class="form-control"
+									id="password"
+									placeholder="Password"
+									required
+									v-model="password"
+								/>
+								<label for="password">Password</label>
+							</div>
+							<button
+								class="btn btn-lg btn-primary w-100 mt-3"
+								type="submit"
+								@click.prevent="userLogin"
+							>
+								登入
+							</button>
+						</form>
+					</div>
+				</div>
+				<p class="mt-5 mb-3 text-muted">&copy; 2021~∞ - 六角學院</p>
+			</div>
+		</div>
+
+		<script>
+			const app = {
+				data() {
+					return {
+						email: "",
+						password: "",
+						url: "https://vue3-course-api.hexschool.io",
+						path: "sec-hexschool",
+					};
+				},
+				methods: {
+					userLogin() {
+						if (!this.email && !this.password) {
+							return alert(
+								"Email or password is not correct, please check again!"
+							);
+						}
+						if (!this.email) return alert("Email cannot be empty!");
+						if (!this.email.includes("@")) {
+							return alert("Email format is not correct!");
+						}
+						if (!this.password) {
+							return alert("Password cannot be empty!");
+						}
+
+						const userData = {
+							email: this.email,
+							password: this.password,
+						};
+						// const userData = {
+						// 	email: JSON.stringify(this.email),
+						// 	password: JSON.stringify(this.password),
+						// };
+
+						axios
+							.post(`${this.url}/admin/signin`, userData)
+							.then(res => {
+								console.log(res);
+							})
+							.catch(err => {
+								console.log(err);
+							});
+
+						// window.location.href = "index2.html";
+					},
+				},
+			};
+
+			Vue.createApp(app).mount("#app");
+		</script>
+	</body>
+</html>
