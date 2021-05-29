@@ -23,7 +23,12 @@
 		<div id="app">
 			<div class="container">
 				<div class="text-end mt-4">
-					<button class="btn btn-primary">建立新的產品</button>
+					<button
+						class="btn btn-primary"
+						@click.prevent="openModal('new')"
+					>
+						建立新的產品
+					</button>
 				</div>
 				<table class="table mt-4">
 					<thead>
@@ -37,14 +42,18 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td></td>
-							<td></td>
-							<td></td>
-							<td></td>
+						<tr v-for="item in productData" :key="item.id">
+							<td>{{ item.category }}</td>
+							<td>{{ item.title }}</td>
+							<td>{{ item.origin_price }}</td>
+							<td>{{ item.price }}</td>
 							<td>
-								<span class="text-success">啟用</span>
-								<span>未啟用</span>
+								<span
+									class="text-success"
+									v-if="item.is_enabled"
+									>啟用</span
+								>
+								<span v-else>未啟用</span>
 							</td>
 							<td>
 								<div class="btn-group">
@@ -65,8 +74,8 @@
 						</tr>
 					</tbody>
 				</table>
-
-				<modal></modal>
+				<!-- <pagination></pagination> -->
+				<modal :type="propsType"></modal>
 			</div>
 		</div>
 
@@ -279,8 +288,10 @@
 			        </div>
 			    </div>
 			</div>
+		</script>
 
-			<div
+		<script type="text/x-template" id="delModal">
+			         <div
 			             id="delProductModal"
 			             ref="delProductModal"
 			             class="modal fade"
@@ -301,45 +312,129 @@
 			                             aria-label="Close"
 			                ></button>
 			            </div>
-			                     <div class="modal-body">
+			            <div class="modal-body">
 			                         是否刪除
 			                         <strong
 			                             class="text-danger"
 			                         ></strong>
 			                         商品(刪除後將無法恢復)。
-			                     </div>
-			                     <div class="modal-footer">
-			                         <button
+			            </div>
+			            <div class="modal-footer">
+			                <button
 			                             type="button"
 			                             class="btn btn-outline-secondary"
 			                             data-bs-dismiss="modal"
-			                         >
-			                             取消
-			                         </button>
-			                         <button
+			                >
+			                    取消
+			                </button>
+			                <button
 			                             type="button"
 			                             class="btn btn-danger"
-			                         >
-			                             確認刪除
-			                         </button>
-			                     </div>
+			                >
+			                    確認刪除
+			                </button>
+			            </div>
 			        </div>
-			             </div>
+			    </div>
 			</div>
 		</script>
 
-		<script>
-			const app = Vue.createApp({
-				mounted() {
-					console.log("hi");
-				},
-			});
+		<!-- pagination -->
+		<script type="text/x-template" id="pagination">
+			<nav aria-label="Page navigation example">
+			    <ul class="pagination">
+			      <li class="page-item">
+			        <a class="page-link" href="#" aria-label="Previous">
+			          <span aria-hidden="true">&laquo;</span>
+			        </a>
+			      </li>
+			      <li class="page-item"><a class="page-link" href="#">1</a></li>
+			      <li class="page-item"><a class="page-link" href="#">2</a></li>
+			      <li class="page-item">
+			        <a class="page-link" href="#" aria-label="Next">
+			          <span aria-hidden="true">&raquo;</span>
+			        </a>
+			      </li>
+			    </ul>
+			  </nav>
+		</script>
 
-			app.component("modal", {
-				template: "#modal",
-			});
+		<script type="module" src="app2.js">
 
-			app.mount("#app");
+			// let productModal = null;
+			// let delProductModal = null;
+
+			// const app = Vue.createApp({
+			// 	data() {
+			// 		return {
+			// 			propsType: "",
+			// 			productData: [],
+			// 			url: "https://vue3-course-api.hexschool.io",
+			// 			path: "sec-hexschool",
+			// 		};
+			// 	},
+			// 	methods: {
+			// 		createModal() {
+			// 			console.log("hello");
+			// 		},
+			// 		async getData(page = 1) {
+			// 			const url = `${this.url}/api/${this.path}/admin/products?page=${page}`;
+			// 			try {
+			// 				const resData = await axios.get(url);
+			// 				console.log(resData);
+			// 				const { products, success } = resData.data;
+			// 				this.productData = products;
+			// 			} catch (error) {
+			// 				// console.log();
+			// 			}
+			// 		},
+			// 		openModal(type) {
+			// 			if (type === "new") {
+			// 				this.propsType = "new";
+			// 			}
+			// 		},
+			// 	},
+			// 	mounted() {
+			// 		const token = document.cookie.replace(
+			// 			/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
+			// 			"$1"
+			// 		);
+
+			// 		if (!token) console.log("wrong token");
+
+			// 		axios.defaults.headers.common["Authorization"] = token;
+			// 		this.getData();
+			// 	},
+			// });
+
+			// app.component("modal", {
+			// 	props: ["type"],
+			// 	template: "#modal",
+			// 	mounted() {
+			// 		productModal = new bootstrap.Modal(
+			// 			document.getElementById("productModal"),
+			// 			{
+			// 				keyboard: false,
+			// 			}
+			// 		);
+			// 		console.log(productModal);
+			// 		// delProductModal = new bootstrap.Modal(
+			// 		// 	document.getElementById("delProductModal"),
+			// 		// 	{
+			// 		// 		keyboard: false,
+			// 		// 	}
+			// 		// );
+
+			// 		// console.log(productModal);
+			// 		// if (this.type === "new") productModal.show();
+			// 	},
+			// });
+
+			// app.component("pagination", {
+			// 	template: "#pagination",
+			// });
+
+			// app.mount("#app");
 		</script>
 	</body>
 </html>
