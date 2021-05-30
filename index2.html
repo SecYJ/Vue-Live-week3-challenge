@@ -16,7 +16,12 @@
 			integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
 			crossorigin="anonymous"
 		></script>
-		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+			integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer"
+		></script>
 		<script src="https://unpkg.com/vue@next"></script>
 	</head>
 	<body>
@@ -60,12 +65,14 @@
 									<button
 										type="button"
 										class="btn btn-outline-primary btn-sm"
+										@click.prevent="openModal('edit', item)"
 									>
 										編輯
 									</button>
 									<button
 										type="button"
 										class="btn btn-outline-danger btn-sm"
+										@click.prevent="openModal('delete', item)"
 									>
 										刪除
 									</button>
@@ -74,8 +81,21 @@
 						</tr>
 					</tbody>
 				</table>
-				<!-- <pagination></pagination> -->
-				<modal :type="propsType"></modal>
+				<div class="d-flex justify-content-center">
+					<pagination
+						:pagination="pagination"
+						@fetch-data="getData"
+					></pagination>
+				</div>
+				<modal
+					:modal-status="modalStatus"
+					:product-form="productForm"
+					@fetch-data="getData"
+				></modal>
+				<del-modal
+					:form-data="productForm"
+					@fetch-data="getData"
+				></del-modal>
 			</div>
 		</div>
 
@@ -110,15 +130,18 @@
 			                                type="text"
 			                                class="form-control"
 			                                placeholder="請輸入圖片連結"
+			                                v-model.trim="productForm.imageUrl"
 			                            />
 			                            <img
 			                                class="img-fluid"
+			                                :src="productForm.imageUrl"
 			                            />
 			                        </div>
 			                        <div class="mb-1">多圖新增</div>
-			                        <div>
+			                        <div v-if="productForm.imagesUrl?.length">
 			                            <div
 			                                class="mb-1"
+			                                v-for="(img, idx) in productForm.imagesUrl" :key="img"
 			                            >
 			                                <div class="form-group">
 			                                    <label for="">圖片網址</label>
@@ -126,13 +149,15 @@
 			                                        type="text"
 			                                        class="form-control"
 			                                        placeholder="請輸入圖片連結"
+			                                        v-model.trim="productForm.imagesUrl[idx]"
 			                                    />
 			                                </div>
 			                                <img
 			                                    class="img-fluid"
+			                                    :src="productForm.imagesUrl[idx]"
 			                                />
 			                            </div>
-			                            <div>
+			                            <div v-if="!productForm.imagesUrl.includes('')">
 			                                <button
 			                                    class="
 			                                        btn
@@ -141,11 +166,13 @@
 			                                        d-block
 			                                        w-100
 			                                    "
+
+			                                    @click.prevent="addCarouselImg"
 			                                >
 			                                    新增圖片
 			                                </button>
 			                            </div>
-			                            <div>
+			                            <div v-else>
 			                                <button
 			                                    class="
 			                                        btn
@@ -154,18 +181,21 @@
 			                                        d-block
 			                                        w-100
 			                                    "
+
+			                                    @click.prevent="removeCarouselImg"
 			                                >
 			                                    刪除圖片
 			                                </button>
 			                            </div>
 			                        </div>
-			                        <div>
+			                        <div v-else>
 			                            <button
 			                                class="
 			                                    btn btn-outline-primary btn-sm
 			                                    d-block
 			                                    w-100
 			                                "
+			                                @click.prevent="addImg"
 			                            >
 			                                新增圖片
 			                            </button>
@@ -179,6 +209,7 @@
 			                                type="text"
 			                                class="form-control"
 			                                placeholder="請輸入標題"
+			                                v-model.trim="productForm.title"
 			                            />
 			                        </div>
 
@@ -190,6 +221,7 @@
 			                                    type="text"
 			                                    class="form-control"
 			                                    placeholder="請輸入分類"
+			                                    v-model.trim="productForm.category"
 			                                />
 			                            </div>
 			                            <div class="form-group col-md-6">
@@ -199,6 +231,7 @@
 			                                    type="text"
 			                                    class="form-control"
 			                                    placeholder="請輸入單位"
+			                                    v-model.trim="productForm.unit"
 			                                />
 			                            </div>
 			                        </div>
@@ -214,6 +247,7 @@
 			                                    min="0"
 			                                    class="form-control"
 			                                    placeholder="請輸入原價"
+			                                    v-model.number="productForm.origin_price"
 			                                />
 			                            </div>
 			                            <div class="form-group col-md-6">
@@ -224,6 +258,7 @@
 			                                    min="0"
 			                                    class="form-control"
 			                                    placeholder="請輸入售價"
+			                                    v-model.number="productForm.price"
 			                                />
 			                            </div>
 			                        </div>
@@ -238,6 +273,7 @@
 			                                type="text"
 			                                class="form-control"
 			                                placeholder="請輸入產品描述"
+			                                v-model.trim="productForm.description"
 			                            >
 			                            </textarea>
 			                        </div>
@@ -248,6 +284,7 @@
 			                                type="text"
 			                                class="form-control"
 			                                placeholder="請輸入說明內容"
+			                                v-model.trim="productForm.content"
 			                            >
 			                            </textarea>
 			                        </div>
@@ -259,6 +296,7 @@
 			                                    type="checkbox"
 			                                    :true-value="1"
 			                                    :false-value="0"
+			                                    v-model="productForm.is_enabled"
 			                                />
 			                                <label
 			                                    class="form-check-label"
@@ -281,6 +319,7 @@
 			                <button
 			                    type="button"
 			                    class="btn btn-primary"
+			                    @click.prevent="submitForm"
 			                >
 			                    確認
 			                </button>
@@ -291,51 +330,53 @@
 		</script>
 
 		<script type="text/x-template" id="delModal">
-			         <div
-			             id="delProductModal"
-			             ref="delProductModal"
-			             class="modal fade"
-			             tabindex="-1"
-			             aria-labelledby="delProductModalLabel"
-			             aria-hidden="true"
+			<div
+			    id="delProductModal"
+			    ref="delProductModal"
+			    class="modal fade"
+			    tabindex="-1"
+			    aria-labelledby="delProductModalLabel"
+			    aria-hidden="true"
 			>
-			    <div class="modal-dialog">
-			        <div class="modal-content border-0">
-			            <div class="modal-header bg-danger text-white">
-			                <h5 id="delProductModalLabel" class="modal-title">
-			                    <span>刪除產品</span>
-			                </h5>
-			                <button
-			                             type="button"
-			                             class="btn-close"
-			                             data-bs-dismiss="modal"
-			                             aria-label="Close"
-			                ></button>
-			            </div>
-			            <div class="modal-body">
-			                         是否刪除
-			                         <strong
-			                             class="text-danger"
-			                         ></strong>
-			                         商品(刪除後將無法恢復)。
-			            </div>
-			            <div class="modal-footer">
-			                <button
-			                             type="button"
-			                             class="btn btn-outline-secondary"
-			                             data-bs-dismiss="modal"
-			                >
-			                    取消
-			                </button>
-			                <button
-			                             type="button"
-			                             class="btn btn-danger"
-			                >
-			                    確認刪除
-			                </button>
-			            </div>
-			        </div>
-			    </div>
+			   <div class="modal-dialog">
+			       <div class="modal-content border-0">
+			           <div class="modal-header bg-danger text-white">
+			               <h5 id="delProductModalLabel" class="modal-title">
+			                   <span>刪除產品</span>
+			               </h5>
+			               <button
+			                    type="button"
+			                    class="btn-close"
+			                    data-bs-dismiss="modal"
+			                    aria-label="Close"
+			               ></button>
+			           </div>
+			           <div class="modal-body">
+			                是否刪除
+			                <strong
+			                    class="text-danger"
+			                             v-text="formData.title"
+			                ></strong>
+			                商品(刪除後將無法恢復)。
+			           </div>
+			           <div class="modal-footer">
+			               <button
+			                    type="button"
+			                    class="btn btn-outline-secondary"
+			                    data-bs-dismiss="modal"
+			               >
+			                   取消
+			               </button>
+			               <button
+			                    type="button"
+			                    class="btn btn-danger"
+			                    @click.prevent="delProduct"
+			               >
+			                   確認刪除
+			               </button>
+			           </div>
+			       </div>
+			   </div>
 			</div>
 		</script>
 
@@ -343,98 +384,27 @@
 		<script type="text/x-template" id="pagination">
 			<nav aria-label="Page navigation example">
 			    <ul class="pagination">
-			      <li class="page-item">
-			        <a class="page-link" href="#" aria-label="Previous">
-			          <span aria-hidden="true">&laquo;</span>
-			        </a>
-			      </li>
-			      <li class="page-item"><a class="page-link" href="#">1</a></li>
-			      <li class="page-item"><a class="page-link" href="#">2</a></li>
-			      <li class="page-item">
-			        <a class="page-link" href="#" aria-label="Next">
-			          <span aria-hidden="true">&raquo;</span>
-			        </a>
-			      </li>
+			        <li class="page-item" :class="{ disabled: !pagination.has_pre }">
+			            <a class="page-link" href="#" aria-label="Previous" @click.prevent="prev">
+			            <span aria-hidden="true">&laquo;</span>
+			            </a>
+			        </li>
+			        <li
+			            class="page-item"
+			            :class="{ active: pagination.current_page === item}"
+			            v-for="item in pagination?.total_pages" :key="item"
+			        >
+			            <a class="page-link" href="#" @click.prevent="getData(item)">{{ item }}</a>
+			            </li>
+			        <li class="page-item" :class="{ disabled: !pagination.has_next }">
+			            <a class="page-link" href="#" aria-label="Next" @click.prevent="next">
+			                <span aria-hidden="true">&raquo;</span>
+			            </a>
+			        </li>
 			    </ul>
-			  </nav>
+			</nav>
 		</script>
 
-		<script type="module" src="app2.js">
-
-			// let productModal = null;
-			// let delProductModal = null;
-
-			// const app = Vue.createApp({
-			// 	data() {
-			// 		return {
-			// 			propsType: "",
-			// 			productData: [],
-			// 			url: "https://vue3-course-api.hexschool.io",
-			// 			path: "sec-hexschool",
-			// 		};
-			// 	},
-			// 	methods: {
-			// 		createModal() {
-			// 			console.log("hello");
-			// 		},
-			// 		async getData(page = 1) {
-			// 			const url = `${this.url}/api/${this.path}/admin/products?page=${page}`;
-			// 			try {
-			// 				const resData = await axios.get(url);
-			// 				console.log(resData);
-			// 				const { products, success } = resData.data;
-			// 				this.productData = products;
-			// 			} catch (error) {
-			// 				// console.log();
-			// 			}
-			// 		},
-			// 		openModal(type) {
-			// 			if (type === "new") {
-			// 				this.propsType = "new";
-			// 			}
-			// 		},
-			// 	},
-			// 	mounted() {
-			// 		const token = document.cookie.replace(
-			// 			/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
-			// 			"$1"
-			// 		);
-
-			// 		if (!token) console.log("wrong token");
-
-			// 		axios.defaults.headers.common["Authorization"] = token;
-			// 		this.getData();
-			// 	},
-			// });
-
-			// app.component("modal", {
-			// 	props: ["type"],
-			// 	template: "#modal",
-			// 	mounted() {
-			// 		productModal = new bootstrap.Modal(
-			// 			document.getElementById("productModal"),
-			// 			{
-			// 				keyboard: false,
-			// 			}
-			// 		);
-			// 		console.log(productModal);
-			// 		// delProductModal = new bootstrap.Modal(
-			// 		// 	document.getElementById("delProductModal"),
-			// 		// 	{
-			// 		// 		keyboard: false,
-			// 		// 	}
-			// 		// );
-
-			// 		// console.log(productModal);
-			// 		// if (this.type === "new") productModal.show();
-			// 	},
-			// });
-
-			// app.component("pagination", {
-			// 	template: "#pagination",
-			// });
-
-			// app.mount("#app");
-		</script>
+		<script type="module" src="app2.js"></script>
 	</body>
 </html>
