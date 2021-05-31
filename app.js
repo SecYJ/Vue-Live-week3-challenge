@@ -1,3 +1,5 @@
+let productModal, delProductModal;
+
 const app = {
 	data() {
 		return {
@@ -21,39 +23,31 @@ const app = {
 		};
 	},
 	methods: {
-		getData() {
-			const token = document.cookie.replace(
-				/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
-				"$1"
-			);
-			axios.defaults.headers.common["Authorization"] = token;
+		verifyUser() {
 			axios
 				.post(`${this.url}/api/user/check`)
 				.then(res => {
 					const { message, success } = res.data;
 					if (!success) throw new Error(message);
-					return axios.get(
-						`${this.url}/api/${this.path}/admin/products`
-					);
 				})
+				.catch(err => {
+					alert(err.message);
+				});
+		},
+		getData() {
+			axios
+				.get(`${this.url}/api/${this.path}/admin/products`)
 				.then(res => {
-					const { success, products } = res.data;
-					if (!success) {
-						throw new Error("Failed to fetch data!");
-					}
+					const { products, success } = res.data;
+					if (!success)
+						throw new Error(
+							"Failed to fetch data, Please try again later!"
+						);
 					this.productData = products;
 				})
 				.catch(err => {
-					alert(err);
+					alert(err.message);
 				});
-		},
-		modal(id, option = "show") {
-			const modal = new bootstrap.Modal(document.getElementById(id), {
-				keyboard: false,
-				backdrop: "static",
-			});
-			if (option === "hide") return modal.hide();
-			return modal.show();
 		},
 		addImg() {
 			this.newProductForm.imagesUrl = [];
@@ -86,7 +80,7 @@ const app = {
 					const { message, success } = res.data;
 					if (!success) throw new Error(message);
 					alert(message);
-					this.modal("productModal", "hide");
+					productModal.hide();
 					this.getData();
 				})
 				.catch(err => {
@@ -96,13 +90,13 @@ const app = {
 		openModal(type, product) {
 			if (type === "new") {
 				this.modalStatus = "new";
-				this.modal("productModal");
+				productModal.show();
 				this.newProductForm = {};
 			}
 
 			if (type === "edit") {
 				this.modalStatus = "edit";
-				this.modal("productModal");
+				productModal.show();
 				this.newProductForm = {
 					...product,
 				};
@@ -111,7 +105,7 @@ const app = {
 			if (type === "delete") {
 				this.modalStatus = "delete";
 				this.deleteText = product.title;
-				this.modal("delProductModal");
+				delProductModal.show();
 				this.newProductForm = {
 					...product,
 				};
@@ -141,11 +135,31 @@ const app = {
 				origin_price: 0,
 				is_enabled: false,
 			};
-			this.modal("productModal", "hide");
+			productModal.hide();
 		},
 	},
-	created() {
-		this.getData();
+	async mounted() {
+		const token = document.cookie.replace(
+			/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
+			"$1"
+		);
+
+		if (!token) window.location = "index.html";
+		axios.defaults.headers.common["Authorization"] = token;
+
+		productModal = new bootstrap.Modal(
+			document.getElementById("productModal")
+		);
+		delProductModal = new bootstrap.Modal(
+			document.getElementById("delProductModal")
+		);
+
+		try {
+			await this.verifyUser();
+			await this.getData();
+		} catch (error) {
+			alert(error.message);
+		}
 	},
 };
 
