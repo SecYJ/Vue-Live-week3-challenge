@@ -24,25 +24,24 @@ const app = {
 	},
 	methods: {
 		verifyUser() {
-			axios
-				.post(`${this.url}/api/user/check`)
-				.then(res => {
-					const { message, success } = res.data;
-					if (!success) throw new Error(message);
-				})
-				.catch(err => {
-					alert(err.message);
-				});
+			axios.post(`${this.url}/api/user/check`).then(res => {
+				const { success } = res.data;
+				if (!success) window.location = "index.html";
+
+				this.getData();
+			});
 		},
 		getData() {
 			axios
 				.get(`${this.url}/api/${this.path}/admin/products`)
 				.then(res => {
 					const { products, success } = res.data;
-					if (!success)
+					if (!success) {
 						throw new Error(
 							"Failed to fetch data, Please try again later!"
 						);
+					}
+
 					this.productData = products;
 				})
 				.catch(err => {
@@ -80,7 +79,9 @@ const app = {
 					const { message, success } = res.data;
 					if (!success) throw new Error(message);
 					alert(message);
-					productModal.hide();
+					method === "delete"
+						? delProductModal.hide()
+						: productModal.hide();
 					this.getData();
 				})
 				.catch(err => {
@@ -138,7 +139,7 @@ const app = {
 			productModal.hide();
 		},
 	},
-	async mounted() {
+	mounted() {
 		const token = document.cookie.replace(
 			/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/,
 			"$1"
@@ -154,12 +155,7 @@ const app = {
 			document.getElementById("delProductModal")
 		);
 
-		try {
-			await this.verifyUser();
-			await this.getData();
-		} catch (error) {
-			alert(error.message);
-		}
+		this.verifyUser();
 	},
 };
 
